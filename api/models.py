@@ -7,7 +7,7 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     image = CloudinaryField('image')
     description = models.TextField(null=True, blank=True)
-    
+
     class Meta:
         verbose_name = 'Category'
         verbose_name_plural = 'Categories'
@@ -18,7 +18,8 @@ class Category(models.Model):
 
 class Package(models.Model):
     title = models.CharField(max_length=255)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name='packages')
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = CloudinaryField('image')

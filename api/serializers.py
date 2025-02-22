@@ -2,17 +2,6 @@ from rest_framework import serializers
 from .models import Category, Package, Product
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
-    def get_image_url(self, obj):
-        return obj.image.url
-
-    class Meta:
-        model = Category
-        fields = ['id', 'name', 'image_url', 'description']
-
-
 class PackageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
 
@@ -23,6 +12,18 @@ class PackageSerializer(serializers.ModelSerializer):
         model = Package
         fields = ['id', 'title', 'category',
                   'description', 'price', 'image_url']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    packages = PackageSerializer(many=True, read_only=True)
+
+    def get_image_url(self, obj):
+        return obj.image.url
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'image_url', 'description', 'packages']
 
 
 class ProductSerializer(serializers.ModelSerializer):
