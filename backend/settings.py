@@ -42,8 +42,8 @@ INSTALLED_APPS = [
 
     # third party apps
     'rest_framework',
-    "rest_framework.authtoken",
     "djoser",
+    'rest_framework_simplejwt',
     'cloudinary',
     'cloudinary_storage',
     'corsheaders',
