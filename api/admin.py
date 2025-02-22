@@ -12,9 +12,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Package)
 class PackageAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'price', 'image')
-    search_fields = ('title', 'category__name')
-    list_filter = ('category__name',)
+    list_display = ('title', 'price', 'image')
+    search_fields = ('title', )
 
 
 @admin.register(Product)
