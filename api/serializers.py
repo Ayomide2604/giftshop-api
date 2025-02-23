@@ -12,7 +12,7 @@ class PackageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Package
         fields = ['id', 'title', 'categories',
-                  'description', 'price', 'image_url']
+                  'description', 'price', 'image_url', 'get_content_type_id']
 
 
 class CategorySerializer(serializers.ModelSerializer):

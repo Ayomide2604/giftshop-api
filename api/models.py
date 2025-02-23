@@ -36,6 +36,10 @@ class Package(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     cart_items = GenericRelation('CartItem')
 
+    def get_content_type_id(self):
+        content_type = ContentType.objects.get_for_model(self)
+        return content_type.id
+
     def __str__(self):
         return self.title
 
