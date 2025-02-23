@@ -1,7 +1,9 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
-
+import uuid
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 # Create your models here.
 
 User = get_user_model()
@@ -24,7 +26,7 @@ class Category(models.Model):
 
 class Package(models.Model):
     title = models.CharField(max_length=255)
-    category = models.ManyToManyField(
+    categories = models.ManyToManyField(
         Category, related_name='packages')
     description = models.TextField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -51,22 +53,32 @@ class Product(models.Model):
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='cart')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def total_cart(self):
+        return sum(item.subtotal() for item in self.items.all()) if self.items.exists() else 0
+
     def __str__(self):
-        return f"{self.user.username} - {self.product.name}"
+        return f"Cart - {self.user.username}"
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    cart = models.ForeignKey(
+        Cart, on_delete=models.CASCADE, related_name="items")
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    item = GenericForeignKey("content_type", "object_id")
     quantity = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def subtotal(self):
+        return self.quantity * getattr(self.item, 'price', 0)
+
     def __str__(self):
-        return f"{self.cart.user.username} - {self.product.name}"
+        return f"{self.quantity} x {self.item} in {self.cart.user.username}'s cart"
