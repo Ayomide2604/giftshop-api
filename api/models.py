@@ -50,9 +50,9 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     cart_items = GenericRelation('CartItem')
 
-    def get_content_type_string(self):
+    def get_content_type_id(self):
         content_type = ContentType.objects.get_for_model(self)
-        return f"{content_type.app_label}|{content_type.model}"
+        return content_type.id
 
     def __str__(self):
         return self.name
