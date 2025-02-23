@@ -2,7 +2,7 @@ from django.db import models
 from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 import uuid
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 # Create your models here.
 
@@ -34,6 +34,7 @@ class Package(models.Model):
     image = CloudinaryField('image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cart_items = GenericRelation('CartItem')
 
     def __str__(self):
         return self.title
@@ -47,6 +48,7 @@ class Product(models.Model):
     image = CloudinaryField('image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    cart_items = GenericRelation('CartItem')
 
     def __str__(self):
         return self.name
