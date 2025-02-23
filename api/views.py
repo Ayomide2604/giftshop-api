@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets
 from .models import Category, Package, Product, Cart, CartItem
 from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer
@@ -34,7 +34,7 @@ class CartViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['delete', 'get'], permission_classes=[IsAuthenticated])
     def clear(self, request, pk=None):
         cart = self.get_object()
         cart.items.all().delete()
@@ -80,3 +80,22 @@ class CartItemViewSet(viewsets.ModelViewSet):
                 serializer.save(cart=cart, quantity=1)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post', 'get'], permission_classes=[IsAuthenticated])
+    def increase_quantity(self, request, cart_pk=None, pk=None):
+        cart_item = get_object_or_404(CartItem, cart_id=cart_pk, id=pk)
+        cart_item.quantity += 1
+        cart_item.save()
+        return Response(CartItemSerializer(cart_item).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post', 'get'], permission_classes=[IsAuthenticated])
+    def decrease_quantity(self, request, cart_pk=None, pk=None):
+        """Decrease quantity of a specific cart item, delete if quantity is 1"""
+        cart_item = get_object_or_404(CartItem, cart_id=cart_pk, id=pk)
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+            return Response(CartItemSerializer(cart_item).data, status=status.HTTP_200_OK)
+        else:
+            cart_item.delete()
+            return Response({"message": "Item removed from cart."}, status=status.HTTP_204_NO_CONTENT)
