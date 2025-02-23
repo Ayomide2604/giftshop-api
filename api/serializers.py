@@ -4,6 +4,7 @@ from .models import Category, Package, Product
 
 class PackageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
+    category = serializers.StringRelatedField(many=True)
 
     def get_image_url(self, obj):
         return obj.image.url
