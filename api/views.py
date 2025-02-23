@@ -56,16 +56,27 @@ class CartItemViewSet(viewsets.ModelViewSet):
         cart = Cart.objects.get(pk=cart_pk)
         serializer = CartItemSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(cart=cart)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # Initialize existing_item to None
+            existing_item = None
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def remove_item(self, request, cart_pk=None, pk=None):
-        try:
-            item = CartItem.objects.get(
-                id=pk, cart__id=cart_pk, cart__user=request.user)
-            item.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except CartItem.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            # Get content type and object id from the validated data
+            content_type = serializer.validated_data.get('content_type')
+            object_id = serializer.validated_data.get('object_id')
+
+            if content_type and object_id:
+                existing_item = CartItem.objects.filter(
+                    cart=cart,
+                    content_type=content_type,
+                    object_id=object_id
+                ).first()
+
+            if existing_item:
+                # Increase quantity of existing item by 1
+                existing_item.quantity += 1
+                existing_item.save()
+                return Response(CartItemSerializer(existing_item).data, status=status.HTTP_200_OK)
+            else:
+                # Create new cart item with quantity 1
+                serializer.save(cart=cart, quantity=1)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
