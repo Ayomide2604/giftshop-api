@@ -2,7 +2,9 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Category, Package, Product, Cart, CartItem
 from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.decorators import action
 # Create your views here.
 
 
@@ -24,6 +26,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 class CartViewSet(viewsets.ModelViewSet):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def get_user_cart(self, request):
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        serializer = self.get_serializer(cart)
+        return Response(serializer.data)
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
