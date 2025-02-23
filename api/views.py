@@ -5,6 +5,7 @@ from .serializers import CategorySerializer, PackageSerializer, ProductSerialize
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework import status
 # Create your views here.
 
 
@@ -33,6 +34,12 @@ class CartViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def clear(self, request, pk=None):
+        cart = self.get_object()
+        cart.items.all().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class CartItemViewSet(viewsets.ModelViewSet):
     serializer_class = CartItemSerializer
@@ -43,3 +50,22 @@ class CartItemViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         cart = Cart.objects.get(pk=self.kwargs['cart_pk'])
         serializer.save(cart=cart)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_item(self, request, cart_pk=None):
+        cart = Cart.objects.get(pk=cart_pk)
+        serializer = CartItemSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(cart=cart)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def remove_item(self, request, cart_pk=None, pk=None):
+        try:
+            item = CartItem.objects.get(
+                id=pk, cart__id=cart_pk, cart__user=request.user)
+            item.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except CartItem.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
