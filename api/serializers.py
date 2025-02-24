@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem
+from accounts.serializers import UserSerializer
 
 
 class PackageSerializer(serializers.ModelSerializer):
@@ -70,15 +71,20 @@ class CartSerializer(serializers.ModelSerializer):
 # Orders
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    item_name = serializers.SerializerMethodField()
+    item_data = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
         fields = ['id', 'order', 'content_type', 'object_id',
-                  'item_name', 'quantity', 'price', 'subtotal']
+                  'item_data', 'quantity', 'price', 'subtotal']
 
-    def get_item_name(self, obj):
-        return str(obj.item)
+    def get_item_data(self, obj):
+
+        if isinstance(obj.item, Product):
+            return ProductSerializer(obj.item).data
+        elif isinstance(obj.item, Package):
+            return PackageSerializer(obj.item).data
+        return None
 
     def get_subtotal(self, obj):
         return obj.subtotal()
@@ -86,6 +92,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
     total_price = serializers.ReadOnlyField()
 
     class Meta:
