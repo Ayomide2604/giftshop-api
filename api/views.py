@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404
-from rest_framework import viewsets
-from .models import Category, Package, Product, Cart, CartItem
-from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer
+from rest_framework import viewsets, permissions
+from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem
+from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from .paginators import CustomPagination
+from .services import place_order
 # Create your views here.
 
 
@@ -103,3 +104,29 @@ class CartItemViewSet(viewsets.ModelViewSet):
         else:
             cart_item.delete()
             return Response({"message": "Item removed from cart."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all().order_by('-created_at')
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    @action(detail=False, methods=['post', 'get'])
+    def place_order(self, request):
+        try:
+            order = place_order(request.user)
+            return Response(OrderSerializer(order).data, status=201)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
+
+
+class OrderItemViewSet(viewsets.ModelViewSet):
+    queryset = OrderItem.objects.all()
+    serializer_class = OrderItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(order__user=self.request.user)
