@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Package, Product, Cart, CartItem
+from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem
 from django.contrib.contenttypes.admin import GenericTabularInline
 
 # Register your models here.
@@ -44,3 +44,18 @@ class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'quantity', 'created_at', 'updated_at')
     search_fields = ('cart__user__username',)
     list_filter = ('cart',)
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('user', 'total_price', 'status',
+                    'created_at', 'updated_at')
+    search_fields = ('user__username',)
+    list_filter = ('status',)
+
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'item', 'quantity', 'price')
+    search_fields = ('order__user__username',)
+    list_filter = ('order',)
