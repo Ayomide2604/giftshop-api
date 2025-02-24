@@ -92,3 +92,46 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.item} in {self.cart.user.username}'s cart"
+
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="orders")
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='pending')
+    total_price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def calculate_total_price(self):
+        self.total_price = sum(item.subtotal() for item in self.items.all())
+        self.save()
+
+    def __str__(self):
+        return f"Order {self.id} - {self.user.username}"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="items")
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    item = GenericForeignKey("content_type", "object_id")
+    quantity = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def subtotal(self):
+        return self.quantity * self.price
+
+    def __str__(self):
+        return f"{self.quantity} x {self.item} in Order {self.order.id}"
