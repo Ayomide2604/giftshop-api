@@ -68,8 +68,6 @@ class CartSerializer(serializers.ModelSerializer):
                   'updated_at', 'total_cart']
 
 
-# Orders
-
 class OrderItemSerializer(serializers.ModelSerializer):
     item_data = serializers.SerializerMethodField()
 
@@ -91,6 +89,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
     class Meta:
         model = Order
         fields = ['id', 'user', 'status', 'payment_status',
