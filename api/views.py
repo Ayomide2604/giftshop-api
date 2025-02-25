@@ -1,13 +1,17 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
 from rest_framework import viewsets, permissions
-from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem
-from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer
+from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem, Shipping
+from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer, ShippingSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from .paginators import CustomPagination
 from .services import place_order
+import secrets
+import requests
+from django.conf import settings
+
 # Create your views here.
 
 
@@ -114,13 +118,82 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
 
-    @action(detail=False, methods=['post', 'get'])
+    @action(detail=False, methods=['post'])
     def place_order(self, request):
         try:
             order = place_order(request.user)
             return Response(OrderSerializer(order).data, status=201)
         except ValueError as e:
             return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post', 'get'])
+    def initialize_payment(self, request, pk=None):
+        order = get_object_or_404(Order, pk=pk, user=request.user)
+
+        if order.payment_status == 'successful':
+            return Response({"message": "This order has already been paid for."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate a unique reference
+        order.reference = f"PAY-{secrets.token_hex(8)}"
+        order.save()
+
+        # Paystack API request payload
+        payload = {
+            "email": request.user.email,
+            "amount": int(order.total_price * 100),  # Convert to kobo
+            "reference": order.reference,
+            "callback_url": settings.PAYSTACK_CALLBACK_URL,
+        }
+
+        headers = {
+            "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json",
+        }
+
+        url = "https://api.paystack.co/transaction/initialize"
+        response = requests.post(url, json=payload, headers=headers)
+        data = response.json()
+
+        if response.status_code == 200 and "data" in data:
+            return Response({"checkout_url": data["data"]["authorization_url"]}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": data.get("message", "Payment initialization failed")}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def verify_payment(self, request):
+        reference = request.GET.get("reference") or request.GET.get("trxref")
+
+        if not reference:
+            return Response({"error": "Reference is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        order = get_object_or_404(Order, reference=reference)
+
+        # Verify the transaction with Paystack
+        url = f"https://api.paystack.co/transaction/verify/{reference}"
+        headers = {
+            "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+        }
+        response = requests.get(url, headers=headers)
+        data = response.json()
+
+        if response.status_code == 200 and data["data"]["status"] == "success":
+            order.payment_status = "successful"
+            order.status = "processing"
+            order.save()
+            return Response(
+                {"message": "Payment verified successfully",
+                    "order_id": order.id, "status": "successful"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            order.payment_status = "failed"
+            order.status = "pending"
+            order.save()
+            return Response(
+                {"message": "Payment verification failed",
+                    "order_id": order.id, "status": "failed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class OrderItemViewSet(viewsets.ModelViewSet):
@@ -130,3 +203,8 @@ class OrderItemViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(order__user=self.request.user)
+
+
+class ShippingViewSet(viewsets.ModelViewSet):
+    queryset = Shipping.objects.all()
+    serializer_class = ShippingSerializer

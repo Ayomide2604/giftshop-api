@@ -103,11 +103,22 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="orders")
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(
+        max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    reference = models.CharField(
+        max_length=100, unique=True, null=True, blank=True)  # Paystack Reference
+
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -135,3 +146,19 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.item} in Order {self.order.id}"
+
+
+class Shipping(models.Model):
+    order = models.OneToOneField(
+        Order, on_delete=models.CASCADE, related_name="shipping")
+    full_name = models.CharField(max_length=255)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Shipping for Order {self.order.id}"

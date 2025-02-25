@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem
+from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem, Shipping
 from accounts.serializers import UserSerializer
 
 
@@ -91,11 +91,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
-    user = UserSerializer(read_only=True)
-    total_price = serializers.ReadOnlyField()
-
     class Meta:
         model = Order
-        fields = ['id', 'user', 'status', 'total_price',
-                  'created_at', 'updated_at', 'items']
+        fields = ['id', 'user', 'status', 'payment_status',
+                  'total_price', 'reference', 'items', 'created_at', 'updated_at']
+
+
+class ShippingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shipping
+        fields = ['id', 'order', 'full_name', 'address', 'city',
+                  'state', 'postal_code', 'country', 'phone', 'created_at']
