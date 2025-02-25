@@ -5,9 +5,8 @@ from .models import CustomUser, Profile
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'username')
+    list_display = ('email', 'username',)
     search_fields = ('email', 'username')
-    list_filter = ('is_active', 'is_staff')
 
 
 @admin.register(Profile)

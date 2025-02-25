@@ -151,14 +151,18 @@ class OrderItem(models.Model):
 class Shipping(models.Model):
     order = models.OneToOneField(
         Order, on_delete=models.CASCADE, related_name="shipping")
-    full_name = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='address')
+    first_name = models.CharField(max_length=255, null=True, blank=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField()
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
     country = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
     phone = models.CharField(max_length=20)
+    city = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Shipping'

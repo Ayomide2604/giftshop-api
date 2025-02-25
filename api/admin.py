@@ -67,7 +67,7 @@ class OrderItemAdmin(admin.ModelAdmin):
 
 @admin.register(Shipping)
 class ShippingAdmin(admin.ModelAdmin):
-    list_display = ('order', 'full_name', 'address', 'city',
+    list_display = ('order', 'user', 'address', 'city',
                     'state', 'postal_code', 'country', 'phone')
     search_fields = ('order__user__username',)
     list_filter = ('order',)
