@@ -111,13 +111,13 @@ class Order(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="orders")
+        User, on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(
         max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     reference = models.CharField(
-        max_length=100, unique=True, null=True, blank=True)  # Paystack Reference
+        max_length=100, unique=True, null=True, blank=True)
 
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, default=0)

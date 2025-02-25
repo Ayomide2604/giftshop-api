@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem, Shipping
-from accounts.serializers import UserSerializer
+
 
 
 class PackageSerializer(serializers.ModelSerializer):
