@@ -160,5 +160,9 @@ class Shipping(models.Model):
     phone = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = 'Shipping'
+        verbose_name_plural = 'Addresses'
+
     def __str__(self):
         return f"Shipping for Order {self.order.id}"

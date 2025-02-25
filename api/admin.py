@@ -12,52 +12,56 @@ class CartItemInline(GenericTabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'image')
+    list_display = ('name',)
     search_fields = ('name',)
     list_filter = ('name',)
+    ordering = ('id',)
 
 
 @admin.register(Package)
 class PackageAdmin(admin.ModelAdmin):
-    list_display = ('title', 'price', 'image')
+    list_display = ('title', 'price')
     search_fields = ('title',)
+    list_filter = ('title',)
+    ordering = ('title',)
     inlines = [CartItemInline]
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'price', 'image')
+    list_display = ('name', 'price')
     search_fields = ('name',)
     list_filter = ('name',)
+    ordering = ('name',)
     inlines = [CartItemInline]
 
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'total_cart')
-    search_fields = ('user',)
-    list_filter = ('user',)
+    list_display = ('user__email', 'total_cart')
+    search_fields = ('user__email',)
+    list_filter = ('user__email',)
 
 
 @admin.register(CartItem)
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ('cart', 'quantity', 'created_at', 'updated_at')
-    search_fields = ('cart__user__username',)
+    search_fields = ('cart__user__email',)
     list_filter = ('cart',)
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('user', 'total_price', 'status',
+    list_display = ('user__email', 'total_price', 'status',
                     'created_at', 'updated_at')
-    search_fields = ('user__username',)
+    search_fields = ('user__email',)
     list_filter = ('status',)
 
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('order', 'item', 'quantity', 'price')
-    search_fields = ('order__user__username',)
+    search_fields = ('order__user__email',)
     list_filter = ('order',)
 
 
