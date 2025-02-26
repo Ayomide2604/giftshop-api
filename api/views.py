@@ -16,19 +16,19 @@ from django.conf import settings
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('-created_at')
     serializer_class = CategorySerializer
     pagination_class = CustomPagination
 
 
 class PackageViewSet(viewsets.ModelViewSet):
-    queryset = Package.objects.all()
+    queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
     pagination_class = CustomPagination
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
 
