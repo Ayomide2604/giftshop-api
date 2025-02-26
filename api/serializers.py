@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem, Shipping
 
 
-
 class PackageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     categories = serializers.StringRelatedField(many=True)
@@ -100,5 +99,5 @@ class OrderSerializer(serializers.ModelSerializer):
 class ShippingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shipping
-        fields = ['id', 'order', 'full_name', 'address', 'city',
+        fields = ['id', 'order', 'first_name', 'last_name', 'address', 'city',
                   'state', 'postal_code', 'country', 'phone', 'created_at']
