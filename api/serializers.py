@@ -99,5 +99,5 @@ class OrderSerializer(serializers.ModelSerializer):
 class ShippingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shipping
-        fields = ['id', 'order', 'first_name', 'last_name', 'address', 'city',
-                  'state', 'postal_code', 'country', 'phone', 'created_at']
+        fields = ['id', 'order', 'user', 'first_name', 'last_name', 'company_name', 'address', 'city',
+                  'state', 'postal_code', 'country', 'phone', 'email', 'created_at']
