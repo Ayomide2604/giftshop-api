@@ -3,6 +3,7 @@ from rest_framework import viewsets, permissions
 from .models import Category, Package, Product, Cart, CartItem, Order, OrderItem, Shipping
 from .serializers import CategorySerializer, PackageSerializer, ProductSerializer, CartSerializer, CartItemSerializer, OrderSerializer, OrderItemSerializer, ShippingSerializer
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
@@ -25,6 +26,8 @@ class PackageViewSet(viewsets.ModelViewSet):
     queryset = Package.objects.all().order_by('-created_at')
     serializer_class = PackageSerializer
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['categories', 'price']
 
 
 class ProductViewSet(viewsets.ModelViewSet):
