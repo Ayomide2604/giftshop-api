@@ -12,6 +12,7 @@ from .services import place_order
 import secrets
 import requests
 from django.conf import settings
+from .filters import PackageFilter
 
 # Create your views here.
 
@@ -27,13 +28,15 @@ class PackageViewSet(viewsets.ModelViewSet):
     serializer_class = PackageSerializer
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['categories', 'price']
+    filterset_class = PackageFilter
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by('-created_at')
     serializer_class = ProductSerializer
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['price']
 
 
 class CartViewSet(viewsets.ModelViewSet):
